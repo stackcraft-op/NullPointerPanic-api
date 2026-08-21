@@ -9,6 +9,6 @@ Rails.application.routes.draw do
   # root "posts#index"
   namespace :api do
     post "register", to: "users#create"
+    post "login", to: "sessions#create"
   end
-
 end
