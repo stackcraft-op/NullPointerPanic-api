@@ -73,6 +73,45 @@ Einloggen mit Benutzername + Passwort.
 }
 ```
 
+## PATCH /api/profile
+
+Persönliche Profildaten aktualisieren (Name, Fachbereich, Wohnort). Erfordert
+gültigen Token (siehe "Authentifizierte Anfragen" unten).
+
+**Request Body:**
+
+```json
+{
+  "first_name": "Max",
+  "last_name": "Mustermann",
+  "specialization": "FIAE",
+  "city": "Köln",
+  "state": "Nordrhein-Westfalen"
+}
+```
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{
+  "id": 1,
+  "username": "maxmuster",
+  "first_name": "Max",
+  "last_name": "Mustermann",
+  "specialization": "FIAE",
+  "city": "Köln",
+  "state": "Nordrhein-Westfalen"
+}
+```
+
+**Antwort Fehler — 422 Unprocessable Entity:**
+
+```json
+{
+  "error": "Ungültiger Fachbereich"
+}
+```
+
 ---
 
 ## Authentifizierte Anfragen (alles danach, z.B. Karteikarten)
