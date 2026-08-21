@@ -5,14 +5,13 @@ module Api
     def create
       user = User.find_by(username: params[:username])
       if user&.authenticate(params[:password])
-        token = JWT.encode({user_id: user.id, exp:24.hours.from_now.to_i}, Rails.application.secret_key_base)
-        render json: {token: token,
-                      user:{id: user.id,
+        token = JWT.encode({ user_id: user.id, exp: 24.hours.from_now.to_i }, Rails.application.secret_key_base)
+        render json: { token: token, user: { id: user.id,
                             username: user.username,
-                            last_login_at: user.last_active_on}
+                            last_login_at: user.last_active_on }
         }
       else
-        render json: {error: "Benutzername oder Passwort falsch"}, status: :unauthorized
+        render json: { error: "Benutzername oder Passwort falsch" }, status: :unauthorized
       end
     end
   end

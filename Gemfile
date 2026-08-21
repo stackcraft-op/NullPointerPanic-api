@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "dotenv-rails", groups: [:development, :test], require: "dotenv/load"
+gem "dotenv-rails", groups: [ :development, :test ], require: "dotenv/load"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3", ">= 8.1.3.1"
