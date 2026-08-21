@@ -52,4 +52,5 @@ group :development, :test do
 
   gem "fiddle"
 
+  gem "jwt"
 end
