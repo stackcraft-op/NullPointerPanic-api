@@ -14,10 +14,8 @@ class User < ApplicationRecord
     else
       self.current_streak = 1
     end
-    self.longest_streak = [current_streak, longest_streak].max
+    self.longest_streak = [ current_streak, longest_streak ].max
     self.last_active_on = today
     save
   end
-
-
 end
