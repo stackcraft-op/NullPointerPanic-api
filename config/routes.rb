@@ -10,5 +10,7 @@ Rails.application.routes.draw do
   namespace :api do
     post "register", to: "users#create"
     post "login", to: "sessions#create"
+    get "profile", to: "profiles#show"
+    patch "profile", to: "profiles#update"
   end
 end
