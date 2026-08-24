@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Api
   class ProfilesController < ApplicationController
     def update
@@ -40,6 +41,5 @@ module Api
     def profile_params
       params.permit(:first_name, :last_name, :specialization, :city, :state)
     end
-
   end
 end
