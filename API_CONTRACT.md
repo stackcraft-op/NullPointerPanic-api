@@ -130,14 +130,12 @@ Option richtig ist — das wird erst beim tatsächlichen Beantworten über
 ```json
 [
   {
-    "id": 42,
-    "question": "Was ist ein Subnetz?",
-    "answer": "Ein logisch unterteilter Teil eines groesseren Netzwerks.",
-    "topic": {
-      "id": 3,
-      "name": "Netzwerktechnik",
-      "exam_type": "ap2_fisi"
-    },
+  "id": 42,
+  "question": "...",
+  "answer": "...",
+  "exam_type": "ap2_fisi",
+  "topic": { "id": 3, "name": "Netzwerktechnik" }
+},
     "multiple_choice_question": {
       "id": 17,
       "question_text": "Welche Aussage beschreibt ein Subnetz korrekt?",
