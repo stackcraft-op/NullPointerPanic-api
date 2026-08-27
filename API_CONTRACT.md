@@ -73,6 +73,41 @@ Einloggen mit Benutzername + Passwort.
 }
 ```
 
+## GET /api/profile
+
+Profildaten des eingeloggten Nutzers abrufen, inklusive Fortschritt (XP) und
+Currency (verdiente, einsetzbare Punkte z. B. für Avatare/Design). Erfordert
+gültigen Token (siehe "Authentifizierte Anfragen" unten).
+
+**Request:** kein Body nötig.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{
+  "id": 1,
+  "username": "maxmuster",
+  "first_name": "Max",
+  "last_name": "Mustermann",
+  "specialization": "FIAE",
+  "city": "Köln",
+  "state": "Nordrhein-Westfalen",
+  "experience": 340,
+  "currency": 12
+}
+```
+
+`first_name`, `last_name`, `specialization`, `city`, `state` sind `null`,
+solange das Profil noch nicht ausgefüllt wurde.
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
 ## PATCH /api/profile
 
 Persönliche Profildaten aktualisieren (Name, Fachbereich, Wohnort). Erfordert
@@ -115,9 +150,9 @@ gültigen Token (siehe "Authentifizierte Anfragen" unten).
 ## GET /api/flashcards/daily
 
 Gibt die 20 Karteikarten des Tages zurück, inklusive der jeweils zugehörigen
-Multiple-Choice-Frage mit Antwortoptionen. Die Auswahl ist pro Nutzer und Tag
-fest (gleicher Nutzer, gleicher Tag = gleiche 20 Karten), ändert sich aber
-täglich. Erfordert gültigen Token.
+Multiple-Choice-Frage mit Antwortoptionen. Die Auswahl ist für alle Nutzer am
+selben Tag identisch (faires Ranking), ändert sich aber täglich. Erfordert
+gültigen Token.
 
 **Wichtig:** Die Antwortoptionen enthalten **keine** Information, welche
 Option richtig ist — das wird erst beim tatsächlichen Beantworten über
@@ -229,6 +264,5 @@ Authorization: Bearer <token>
 ## Offene Punkte
 
 - [ ] Passwort-Mindestlänge / Regeln — wer validiert
-- [ ] CORS auf Ruby-Seite muss `http://localhost:5173` erlauben
-- [ ] Token-Ablauf (läuft er ab? nach wie langer Zeit?)
+- [ ] Token-Refresh 
 - [ ] Endpoint für "Passwort zurücksetzen" (per E-Mail)
