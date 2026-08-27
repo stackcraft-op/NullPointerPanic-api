@@ -141,6 +141,7 @@ Option richtig ist — das wird erst beim tatsächlichen Beantworten über
     "multiple_choice_question": {
       "id": 17,
       "question_text": "Welche Aussage beschreibt ein Subnetz korrekt?",
+      "difficulty": "leicht",
       "answer_options": [
         { "id": 101, "text": "Ein logisch unterteilter Teil eines Netzwerks" },
         { "id": 102, "text": "Ein physisches Netzwerkkabel" },
@@ -151,6 +152,9 @@ Option richtig ist — das wird erst beim tatsächlichen Beantworten über
   }
 ]
 ```
+
+`difficulty` ist entweder `"leicht"` oder `"schwer"` — kann im Frontend z. B.
+für eine visuelle Kennzeichnung oder spätere Filter genutzt werden.
 
 **Antwort Fehler — 401 Unauthorized:**
 
@@ -168,11 +172,26 @@ gültigen Token.
 
 **Request:** kein Body nötig, `:id` in der URL ist die gewählte `answer_option.id`.
 
-**Antwort Erfolg — 200 OK:**
+**Antwort Erfolg, richtig beantwortet — 200 OK:**
 
 ```json
 {
   "correct": true
+}
+```
+
+**Antwort Erfolg, falsch beantwortet — 200 OK:**
+
+Bei einer falschen Antwort wird zusätzlich die richtige Option mitgeschickt,
+damit das Frontend sie zum Lernen anzeigen kann.
+
+```json
+{
+  "correct": false,
+  "correct_option": {
+    "id": 101,
+    "text": "Ein logisch unterteilter Teil eines Netzwerks"
+  }
 }
 ```
 
