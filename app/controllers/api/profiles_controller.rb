@@ -31,7 +31,7 @@ module Api
         city: profile.city,
         state: profile.state,
         experience: profile.experience,
-        tokens: profile.tokens
+        currency: profile.currency
       }
     end
 
