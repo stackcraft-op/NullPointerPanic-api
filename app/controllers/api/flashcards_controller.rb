@@ -3,12 +3,7 @@
 module Api
   class FlashcardsController < ApplicationController
     def daily
-      seed = ActiveRecord::Base.connection.quote(Date.current.to_s)
-      flashcards = Flashcard
-                     .joins(:multiple_choice_question)
-                     .includes(:topic, multiple_choice_question: :answer_options)
-                     .order(Arel.sql("md5(flashcards.id::text || #{seed})"))
-                     .limit(20)
+      flashcards = Flashcard.daily_selection.includes(:topic, multiple_choice_question: :answer_options)
       render json: flashcards.map { |card| flashcard_json(card) }
     end
     private
