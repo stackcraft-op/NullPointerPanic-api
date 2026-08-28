@@ -147,6 +147,44 @@ gültigen Token (siehe "Authentifizierte Anfragen" unten).
 }
 ```
 
+## GET /api/flashcards
+
+Gibt **alle** Karteikarten zurück (aktuell ca. 700), ohne Multiple-Choice-Frage
+— reiner Nachschlage-Text (Frage + Antwort). Gedacht als Datenbasis für eine
+Wiki-/Nachschlage-Ansicht mit clientseitiger Suche/Filterung im Frontend.
+Erfordert gültigen Token.
+
+**Unterschied zu `GET /api/flashcards/daily`:** Dieser Endpunkt liefert den
+kompletten Bestand auf einmal, unabhängig vom Tag, und enthält keine
+Multiple-Choice-Frage — er dient dem Nachschlagen, nicht dem Abfragen.
+
+**Request:** kein Body nötig.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+[
+  {
+    "id": 42,
+    "question": "Was ist ein Subnetz?",
+    "answer": "Ein logisch unterteilter Teil eines groesseren Netzwerks.",
+    "exam_type": "ap2_fisi",
+    "topic": {
+      "id": 3,
+      "name": "Netzwerktechnik"
+    }
+  }
+]
+```
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
 ## GET /api/flashcards/daily
 
 Gibt die 20 Karteikarten des Tages zurück, inklusive der jeweils zugehörigen
@@ -202,8 +240,12 @@ für eine visuelle Kennzeichnung oder spätere Filter genutzt werden.
 ## POST /api/answer_options/:id/submit
 
 Prüft, ob die gewählte Antwortoption richtig ist, und trackt den Versuch
-serverseitig (fließt später in Fortschritt und Ranking ein). Erfordert
-gültigen Token.
+serverseitig (fließt in Fortschritt, Currency und XP ein). Erfordert gültigen
+Token.
+
+Jede Tagesfrage kann pro Tag nur einmal beantwortet werden — das Frontend
+blendet beantwortete Fragen ohnehin aus, dies ist eine zusätzliche
+serverseitige Absicherung.
 
 **Request:** kein Body nötig, `:id` in der URL ist die gewählte `answer_option.id`.
 
@@ -246,6 +288,14 @@ damit das Frontend sie zum Lernen anzeigen kann.
 }
 ```
 
+**Antwort Fehler — 422 Unprocessable Entity** (Frage heute bereits beantwortet):
+
+```json
+{
+  "error": "Frage wurde heute bereits beantwortet"
+}
+```
+
 ---
 
 ## Authentifizierte Anfragen (alles danach, z.B. Karteikarten)
@@ -264,5 +314,5 @@ Authorization: Bearer <token>
 ## Offene Punkte
 
 - [ ] Passwort-Mindestlänge / Regeln — wer validiert
-- [ ] Token-Refresh 
+- [ ] Token-Refresh
 - [ ] Endpoint für "Passwort zurücksetzen" (per E-Mail)
