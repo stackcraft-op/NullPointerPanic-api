@@ -15,14 +15,14 @@ namespace :flashcards do
     imported = 0
 
     blocks.each do |block|
-      title    = block[/^## Karte \d+:\s*(.+)$/, 1]
-      inhalt   = block[/^\*\*Inhalt:\*\*\s*(.+)$/, 1]
+      title    = block[/^## Karte \d+:\s*(.+)$/, 1]&.strip
+      inhalt   = block[/^\*\*Inhalt:\*\*\s*(.+)$/, 1]&.strip
       schwierigkeit = block[/^\*\*Frage \((Leicht|Schwer)\):\*\*/, 1]
-      frage = block[/^\*\*Frage \((?:Leicht|Schwer)\):\*\*\s*(.+)$/, 1]
-      option_a = block[/^A\)\s*(.+)$/, 1]
-      option_b = block[/^B\)\s*(.+)$/, 1]
-      option_c = block[/^C\)\s*(.+)$/, 1]
-      option_d = block[/^D\)\s*(.+)$/, 1]
+      frage    = block[/^\*\*Frage \((?:Leicht|Schwer)\):\*\*\s*(.+)$/, 1]&.strip
+      option_a = block[/^A\)\s*(.+)$/, 1]&.strip
+      option_b = block[/^B\)\s*(.+)$/, 1]&.strip
+      option_c = block[/^C\)\s*(.+)$/, 1]&.strip
+      option_d = block[/^D\)\s*(.+)$/, 1]&.strip
       loesung  = block[/^\*\*Lösung:\*\*\s*([ABCD])$/, 1]
 
       if [ title, inhalt, schwierigkeit, frage, option_a, option_b, option_c, option_d, loesung ].any?(&:nil?)
