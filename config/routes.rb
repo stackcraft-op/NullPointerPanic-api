@@ -13,7 +13,9 @@ Rails.application.routes.draw do
     get "profile", to: "profiles#show"
     patch "profile", to: "profiles#update"
     get "flashcards/daily", to: "flashcards#daily"
-    get "flashcards", to => "flashcards#index"
+    get "flashcards", to: "flashcards#index"
     post "answer_options/:id/submit", to: "answer_options#submit"
+    get "rankings/overall", to: "rankings#overall"
+    get "rankings/weekly", to: "rankings#weekly"
   end
 end
