@@ -398,6 +398,52 @@ Nutzer, die diese Woche noch nichts beantwortet haben, erscheinen mit
 }
 ```
 
+## GET /api/rankings/by_state
+
+Rangliste nach Erfahrungspunkten (XP), gefiltert auf ein einzelnes
+Bundesland. Gleiche Logik wie `GET /api/rankings/overall`, nur vorher auf
+`profile.state` gefiltert. Erfordert gültigen Token.
+
+**Request:** kein Body nötig. `state` als Query-Parameter, Pflichtfeld —
+muss exakt einem der Bundesland-Werte aus `PATCH /api/profile` entsprechen
+(z. B. `Nordrhein-Westfalen`, `Bayern`).
+
+```
+GET /api/rankings/by_state?state=Bayern
+```
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{
+  "top": [
+    { "rank": 1, "username": "anna", "score": 800 },
+    { "rank": 2, "username": "tom", "score": 650 }
+  ],
+  "me": { "rank": 5, "username": "kevin", "score": 200 }
+}
+```
+
+Gleiches Format wie die anderen Ranking-Endpunkte. `me` ist `null`, falls
+der eingeloggte Nutzer nicht aus dem angefragten Bundesland kommt (dann
+also nicht in der gefilterten Liste vorkommt).
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+**Antwort Fehler — 422 Unprocessable Entity** (Parameter `state` fehlt):
+
+```json
+{
+  "error": "Bundesland fehlt"
+}
+```
+
 ---
 
 ## Authentifizierte Anfragen (alles danach, z.B. Karteikarten)
