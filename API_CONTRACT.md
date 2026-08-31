@@ -296,6 +296,72 @@ damit das Frontend sie zum Lernen anzeigen kann.
 }
 ```
 
+## GET /api/rankings/overall
+
+Rangliste nach gesamten Erfahrungspunkten (XP), über die komplette bisherige
+Nutzungsdauer (kein Zeitfenster). Erfordert gültigen Token.
+
+**Request:** kein Body nötig.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{
+  "top": [
+    { "rank": 1, "username": "maxmuster", "score": 1200 },
+    { "rank": 2, "username": "anna", "score": 980 }
+  ],
+  "me": { "rank": 47, "username": "kevin", "score": 90 }
+}
+```
+
+`top` enthält immer maximal 10 Einträge, unabhängig davon, wie viele Nutzer
+es insgesamt gibt. `me` zeigt den eigenen Rang, auch wenn dieser außerhalb
+der Top 10 liegt — so kann das Frontend z. B. "Du bist #47" anzeigen, ohne
+die komplette Liste laden zu müssen. `score` ist bei `overall` die aktuelle
+`experience` aus dem eigenen Profil.
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+## GET /api/rankings/weekly
+
+Rangliste nach Anzahl richtig beantworteter Fragen innerhalb der aktuellen
+Kalenderwoche (Montag bis Sonntag). Setzt sich jede Woche automatisch
+zurück, sobald ein neuer Montag beginnt. Erfordert gültigen Token.
+
+**Request:** kein Body nötig.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{
+  "top": [
+    { "rank": 1, "username": "anna", "score": 18 },
+    { "rank": 2, "username": "maxmuster", "score": 15 }
+  ],
+  "me": { "rank": 3, "username": "kevin", "score": 12 }
+}
+```
+
+Identisches Format wie `GET /api/rankings/overall` — nur `score` bedeutet
+hier "Anzahl richtig beantworteter Fragen diese Woche" statt Gesamt-XP.
+Nutzer, die diese Woche noch nichts beantwortet haben, erscheinen mit
+`score: 0`, nicht gar nicht.
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
 ---
 
 ## Authentifizierte Anfragen (alles danach, z.B. Karteikarten)
