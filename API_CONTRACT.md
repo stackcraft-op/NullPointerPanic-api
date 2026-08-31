@@ -147,6 +147,42 @@ gültigen Token (siehe "Authentifizierte Anfragen" unten).
 }
 ```
 
+## GET /api/topics/progress
+
+Gibt für jedes Themengebiet den Lernfortschritt des eingeloggten Nutzers als
+Prozentzahl zurück — gedacht für Fortschrittsbalken auf der Profilseite.
+Erfordert gültigen Token.
+
+**Wichtig:** Der Fortschritt basiert auf dem **letzten** Beantwortungsversuch
+pro Frage, nicht darauf, ob sie irgendwann mal richtig war. Das bedeutet:
+Der Wert kann auch sinken, wenn eine zuvor richtig beantwortete Frage später
+falsch beantwortet wird.
+
+**Request:** kein Body nötig.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+[
+  { "id": 1, "name": "IT-Infrastruktur & Netzwerke", "progress_percent": 45 },
+  { "id": 2, "name": "Softwareentwicklung & Programmierung", "progress_percent": 70 },
+  { "id": 3, "name": "Datenbanken & Datenanalyse", "progress_percent": 20 },
+  { "id": 4, "name": "IT-Sicherheit & Datenschutz", "progress_percent": 60 },
+  { "id": 5, "name": "Projektmanagement & Qualitätssicherung", "progress_percent": 10 },
+  { "id": 6, "name": "BWL, Wirtschaft & Organisation", "progress_percent": 0 }
+]
+```
+
+`progress_percent` ist eine gerundete Ganzzahl von 0 bis 100.
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
 ## GET /api/flashcards
 
 Gibt **alle** Karteikarten zurück (aktuell ca. 700), ohne Multiple-Choice-Frage
