@@ -39,5 +39,22 @@ module Api
       leaderboard = Leaderboard.new(entries)
       render json: { top: leaderboard.top, me: leaderboard.me(@current_user) }
     end
+
+    # Rangliste nach Bundesland
+    def by_state
+      state = params[:state]
+
+      if state.blank?
+        return render json: { error: "Bundesland fehlt" }, status: :unprocessable_entity
+      end
+
+      entries = Profile.includes(:user)
+                       .where(state: state)
+                       .map { |p| Leaderboard::Entry.new(p.user, p.experience) }
+                       .sort_by { |e| -e.score }
+
+      leaderboard = Leaderboard.new(entries)
+      render json: { top: leaderboard.top, me: leaderboard.me(@current_user) }
+    end
   end
 end

@@ -18,5 +18,6 @@ Rails.application.routes.draw do
     get "rankings/overall", to: "rankings#overall"
     get "rankings/weekly", to: "rankings#weekly"
     get "topics/progress", to: "topics#progress"
+    get "rankings/by_state", to: "rankings#by_state"
   end
 end
