@@ -17,5 +17,6 @@ Rails.application.routes.draw do
     post "answer_options/:id/submit", to: "answer_options#submit"
     get "rankings/overall", to: "rankings#overall"
     get "rankings/weekly", to: "rankings#weekly"
+    get "topics/progress", to: "topics#progress"
   end
 end
