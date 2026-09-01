@@ -87,13 +87,11 @@ module Api
         source: :quiz
       )
 
-      unless correct
-        CheckedFlashcard.find_by(user: @current_user, flashcard: question.flashcard)&.destroy
-      end
-
       if correct
+        @current_user.profile.increment!(:experience, Profile::XP_PER_QUIZ_ANSWER)
         render json: { correct: true }
       else
+        CheckedFlashcard.find_by(user: @current_user, flashcard: question.flashcard)&.destroy
         correct_option = question.answer_options.find_by(correct: true)
         render json: {
           correct: false,

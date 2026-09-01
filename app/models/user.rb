@@ -20,5 +20,9 @@ class User < ApplicationRecord
     self.longest_streak = [ current_streak, longest_streak ].max
     self.last_active_on = today
     save
+
+    if current_streak.positive? && (current_streak % 7).zero?
+      profile.increment!(:currency, 10)
+    end
   end
 end
