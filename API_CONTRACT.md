@@ -154,9 +154,10 @@ Prozentzahl zurück — gedacht für Fortschrittsbalken auf der Profilseite.
 Erfordert gültigen Token.
 
 **Wichtig:** Der Fortschritt basiert auf dem **letzten** Beantwortungsversuch
-pro Frage, nicht darauf, ob sie irgendwann mal richtig war. Das bedeutet:
-Der Wert kann auch sinken, wenn eine zuvor richtig beantwortete Frage später
-falsch beantwortet wird.
+pro Frage (egal ob aus den Tageskarten oder dem Lernkarten-Quiz), nicht
+darauf, ob sie irgendwann mal richtig war. Das bedeutet: Der Wert kann auch
+sinken, wenn eine zuvor richtig beantwortete Frage später falsch beantwortet
+wird.
 
 **Request:** kein Body nötig.
 
@@ -180,6 +181,181 @@ falsch beantwortet wird.
 ```json
 {
   "error": "Nicht autorisiert"
+}
+```
+
+## GET /api/topics/:id/flashcards
+
+Gibt alle Karteikarten eines Themas zurück, inklusive ob der eingeloggte
+Nutzer sie bereits "abgehakt" hat. Datenbasis für die
+Lernkarten-Durcharbeiten-Seite (Thema durcharbeiten, Karten manuell
+abhaken). Erfordert gültigen Token.
+
+**Request:** kein Body nötig.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+[
+  {
+    "id": 42,
+    "question": "Was ist ein Subnetz?",
+    "answer": "Ein logisch unterteilter Teil eines groesseren Netzwerks.",
+    "checked": false
+  },
+  {
+    "id": 43,
+    "question": "Was ist ein Gateway?",
+    "answer": "Ein Netzwerkknoten, der zwischen zwei Netzwerken vermittelt.",
+    "checked": true
+  }
+]
+```
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+## POST /api/flashcards/:flashcard_id/check
+
+Hakt eine Karteikarte für den eingeloggten Nutzer ab, oder macht das Abhaken
+rückgängig — funktioniert als **Toggle**, das Frontend ruft immer denselben
+Endpunkt auf, egal in welche Richtung. Erfordert gültigen Token.
+
+**Request:** kein Body nötig, `:flashcard_id` in der URL.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{ "checked": true }
+```
+
+oder, falls das Abhaken rückgängig gemacht wurde:
+
+```json
+{ "checked": false }
+```
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+**Antwort Fehler — 404 Not Found:**
+
+```json
+{
+  "error": "Karte nicht gefunden"
+}
+```
+
+## POST /api/quiz
+
+Generiert ein Quiz mit 20 zufälligen Fragen aus den **abgehakten** Karten
+eines Themas. Erfordert mindestens 20 abgehakte Karten **innerhalb dieses
+Themas** — der abgehakte Fortschritt ist pro Thema getrennt, nicht global.
+Erfordert gültigen Token.
+
+**Wichtig:** Die Antwortoptionen enthalten **keine** Information, welche
+Option richtig ist — Prüfung erfolgt über
+`POST /api/answer_options/:id/quiz_submit`.
+
+**Request Body:**
+
+```json
+{ "topic_id": 3 }
+```
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+[
+  {
+    "id": 42,
+    "question": "Was ist ein Subnetz?",
+    "multiple_choice_question": {
+      "id": 17,
+      "question_text": "Welche Aussage beschreibt ein Subnetz korrekt?",
+      "answer_options": [
+        { "id": 101, "text": "Ein logisch unterteilter Teil eines Netzwerks" },
+        { "id": 102, "text": "Ein physisches Netzwerkkabel" },
+        { "id": 103, "text": "Ein Router-Hersteller" },
+        { "id": 104, "text": "Eine Verschluesselungsmethode" }
+      ]
+    }
+  }
+]
+```
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+**Antwort Fehler — 422 Unprocessable Entity** (weniger als 20 abgehakte Karten im Thema):
+
+```json
+{
+  "error": "Mindestens 20 abgehakte Karten in diesem Thema noetig"
+}
+```
+
+## POST /api/answer_options/:id/quiz_submit
+
+Prüft eine Quiz-Antwort. Anders als beim Tageskarten-Submit: **kein**
+Tageslimit (kann beliebig oft am Tag genutzt werden), **keine**
+Currency-Vergabe. Richtige Antworten fließen weiterhin in den
+Themenfortschritt (`GET /api/topics/progress`) ein, zählen aber **nicht**
+für das Wochen-Ranking. Bei einer **falschen** Antwort wird die zugehörige
+Karteikarte automatisch wieder "nicht abgehakt" — sie taucht beim nächsten
+`GET /api/topics/:id/flashcards`-Aufruf wieder mit `checked: false` auf.
+Erfordert gültigen Token.
+
+**Request:** kein Body nötig, `:id` in der URL ist die gewählte `answer_option.id`.
+
+**Antwort Erfolg, richtig beantwortet — 200 OK:**
+
+```json
+{
+  "correct": true
+}
+```
+
+**Antwort Erfolg, falsch beantwortet — 200 OK:**
+
+```json
+{
+  "correct": false,
+  "correct_option": {
+    "id": 101,
+    "text": "Ein logisch unterteilter Teil eines Netzwerks"
+  }
+}
+```
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+**Antwort Fehler — 404 Not Found** (ungültige `:id`):
+
+```json
+{
+  "error": "Antwortoption nicht gefunden"
 }
 ```
 
@@ -367,8 +543,11 @@ die komplette Liste laden zu müssen. `score` ist bei `overall` die aktuelle
 
 ## GET /api/rankings/weekly
 
-Rangliste nach Anzahl richtig beantworteter Fragen innerhalb der aktuellen
-Kalenderwoche (Montag bis Sonntag). Setzt sich jede Woche automatisch
+Rangliste nach Anzahl richtig beantworteter **Tageskarten-Fragen** innerhalb
+der aktuellen Kalenderwoche (Montag bis Sonntag). Quiz-Antworten
+(`POST /api/answer_options/:id/quiz_submit`) zählen hier bewusst **nicht**
+mit, damit das Ranking reine Tagesleistung misst statt durch beliebig
+wiederholbares Üben beeinflussbar zu sein. Setzt sich jede Woche automatisch
 zurück, sobald ein neuer Montag beginnt. Erfordert gültigen Token.
 
 **Request:** kein Body nötig.
@@ -386,9 +565,9 @@ zurück, sobald ein neuer Montag beginnt. Erfordert gültigen Token.
 ```
 
 Identisches Format wie `GET /api/rankings/overall` — nur `score` bedeutet
-hier "Anzahl richtig beantworteter Fragen diese Woche" statt Gesamt-XP.
-Nutzer, die diese Woche noch nichts beantwortet haben, erscheinen mit
-`score: 0`, nicht gar nicht.
+hier "Anzahl richtig beantworteter Tageskarten-Fragen diese Woche" statt
+Gesamt-XP. Nutzer, die diese Woche noch nichts beantwortet haben, erscheinen
+mit `score: 0`, nicht gar nicht.
 
 **Antwort Fehler — 401 Unauthorized:**
 
