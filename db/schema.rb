@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_27_000013) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_000015) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,6 +21,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000013) do
     t.text "text"
     t.datetime "updated_at", null: false
     t.index ["multiple_choice_question_id"], name: "index_answer_options_on_multiple_choice_question_id"
+  end
+
+  create_table "checked_flashcards", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "flashcard_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["flashcard_id"], name: "index_checked_flashcards_on_flashcard_id"
+    t.index ["user_id", "flashcard_id"], name: "index_checked_flashcards_on_user_id_and_flashcard_id", unique: true
+    t.index ["user_id"], name: "index_checked_flashcards_on_user_id"
   end
 
   create_table "flashcards", force: :cascade do |t|
@@ -62,6 +72,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000013) do
     t.boolean "correct"
     t.datetime "created_at", null: false
     t.bigint "multiple_choice_question_id"
+    t.integer "source", default: 0
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["multiple_choice_question_id"], name: "index_progress_entries_on_multiple_choice_question_id"
@@ -88,6 +99,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_000013) do
   end
 
   add_foreign_key "answer_options", "multiple_choice_questions"
+  add_foreign_key "checked_flashcards", "flashcards"
+  add_foreign_key "checked_flashcards", "users"
   add_foreign_key "flashcards", "topics"
   add_foreign_key "multiple_choice_questions", "flashcards"
   add_foreign_key "profiles", "users"

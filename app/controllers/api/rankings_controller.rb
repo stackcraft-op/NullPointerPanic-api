@@ -24,7 +24,7 @@ module Api
       # Zaehlt pro User, wie viele richtige Antworten diese Woche vorliegen.
       # Ergebnis ist ein Hash: { user_id => anzahl }
       correct_counts = ProgressEntry
-                         .where(correct: true, answered_at: week_range)
+                         .where(correct: true, answered_at: week_range, source: :daily)
                          .group(:user_id)
                          .count
 
