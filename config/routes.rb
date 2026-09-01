@@ -19,5 +19,9 @@ Rails.application.routes.draw do
     get "rankings/weekly", to: "rankings#weekly"
     get "topics/progress", to: "topics#progress"
     get "rankings/by_state", to: "rankings#by_state"
+    get "topics/:id/flashcards", to: "topics#flashcards"
+    post "flashcards/:flashcard_id/check", to: "flashcard_checks#create"
+    post "quiz", to: "quiz#create"
+    post "answer_options/:id/quiz_submit", to: "answer_options#quiz_submit"
   end
 end

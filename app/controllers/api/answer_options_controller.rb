@@ -21,7 +21,8 @@ module Api
       already_answered_today = ProgressEntry.exists?(
         user: @current_user,
         multiple_choice_question: question,
-        answered_at: Date.current.all_day
+        answered_at: Date.current.all_day,
+        source: :daily
       )
 
       if already_answered_today
@@ -45,7 +46,8 @@ module Api
         user: @current_user,
         multiple_choice_question: question,
         correct: correct,
-        answered_at: Time.current
+        answered_at: Time.current,
+        source: :daily
       )
 
       # Currency nur vergeben: aktuell richtig UND noch nie vorher richtig
@@ -59,6 +61,36 @@ module Api
 
       # Antwort an das Frontend: bei falscher Antwort wird zusaetzlich die
       # richtige Option mitgeschickt (Lernfeedback laut API-Vertrag)
+      if correct
+        render json: { correct: true }
+      else
+        correct_option = question.answer_options.find_by(correct: true)
+        render json: {
+          correct: false,
+          correct_option: { id: correct_option.id, text: correct_option.text }
+        }
+      end
+    end
+
+    def quiz_submit
+      selected_option = AnswerOption.find_by(id: params[:id])
+      return render json: { error: "Antwortoption nicht gefunden" }, status: :not_found unless selected_option
+
+      question = selected_option.multiple_choice_question
+      correct = selected_option.correct
+
+      ProgressEntry.create!(
+        user: @current_user,
+        multiple_choice_question: question,
+        correct: correct,
+        answered_at: Time.current,
+        source: :quiz
+      )
+
+      unless correct
+        CheckedFlashcard.find_by(user: @current_user, flashcard: question.flashcard)&.destroy
+      end
+
       if correct
         render json: { correct: true }
       else
@@ -87,7 +119,7 @@ module Api
       # Wie viele der heutigen 20 wurden ueberhaupt schon beantwortet
       # (richtig ODER falsch)?
       answered_today = ProgressEntry
-                         .where(user: @current_user, multiple_choice_question_id: daily_ids, answered_at: Date.current.all_day)
+                         .where(user: @current_user, multiple_choice_question_id: daily_ids, answered_at: Date.current.all_day, source: :daily)
                          .distinct
                          .pluck(:multiple_choice_question_id)
 
@@ -96,7 +128,7 @@ module Api
 
       # Alle 20 sind durch: jetzt zaehlen, wie viele davon RICHTIG waren
       correct_today = ProgressEntry
-                        .where(user: @current_user, multiple_choice_question_id: daily_ids, answered_at: Date.current.all_day, correct: true)
+                        .where(user: @current_user, multiple_choice_question_id: daily_ids, answered_at: Date.current.all_day, correct: true, source: :daily)
                         .distinct
                         .pluck(:multiple_choice_question_id)
 
