@@ -9,7 +9,10 @@ Basis-URL lokal: `http://localhost:3000`
 
 ## POST /api/register
 
-Konto anlegen.
+Konto anlegen. `specialization` und `state` sind seit [Datum ergänzen]
+**Pflichtfelder** — Registrierung schlägt ohne sie fehl. Beide Werte müssen
+exakt einer der gültigen Optionen entsprechen (siehe `PATCH /api/profile`
+für die vollständige Liste gültiger `specialization`/`state`-Werte).
 
 **Request Body:**
 
@@ -17,7 +20,9 @@ Konto anlegen.
 {
   "username": "maxmuster",
   "email": "max@example.com",
-  "password": "geheim123"
+  "password": "geheim123",
+  "specialization": "FIAE",
+  "state": "Bayern"
 }
 ```
 
@@ -31,6 +36,10 @@ Konto anlegen.
 }
 ```
 
+Profil (inkl. `specialization`/`state`) wird im Hintergrund automatisch mit
+angelegt — für die vollständigen Profildaten anschließend `GET /api/profile`
+aufrufen.
+
 **Antwort Fehler — 422 Unprocessable Entity:**
 
 ```json
@@ -38,6 +47,10 @@ Konto anlegen.
   "error": "E-Mail wird bereits verwendet"
 }
 ```
+
+Weitere mögliche Fehlermeldungen: `"Fachbereich darf nicht leer sein"`,
+`"Ungültiger Fachbereich"`, `"Bundesland darf nicht leer sein"`,
+`"Ungültiges Bundesland"`.
 
 ## POST /api/login
 
