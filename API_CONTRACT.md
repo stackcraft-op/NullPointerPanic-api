@@ -346,12 +346,26 @@ Erfordert gültigen Token.
 
 **Antwort Erfolg, falsch beantwortet — 200 OK:**
 
+Zusätzlich zur richtigen Option wird die vollständige zugehörige Karteikarte
+mitgeschickt (`question`, `answer`, `exam_type`, `topic`) — für eine
+ausführlichere Erklärung im Frontend, nicht nur die kurze MC-Antwort.
+
 ```json
 {
   "correct": false,
   "correct_option": {
     "id": 101,
     "text": "Ein logisch unterteilter Teil eines Netzwerks"
+  },
+  "flashcard": {
+    "id": 42,
+    "question": "Was ist ein Subnetz?",
+    "answer": "Ein logisch unterteilter Teil eines groesseren Netzwerks.",
+    "exam_type": "ap2_fisi",
+    "topic": {
+      "id": 3,
+      "name": "Netzwerktechnik"
+    }
   }
 }
 ```
@@ -484,8 +498,9 @@ serverseitige Absicherung.
 
 **Antwort Erfolg, falsch beantwortet — 200 OK:**
 
-Bei einer falschen Antwort wird zusätzlich die richtige Option mitgeschickt,
-damit das Frontend sie zum Lernen anzeigen kann.
+Bei einer falschen Antwort werden zusätzlich die richtige Option **und** die
+vollständige zugehörige Karteikarte (`question`, `answer`, `exam_type`,
+`topic`) mitgeschickt, damit das Frontend sie zum Lernen anzeigen kann.
 
 ```json
 {
@@ -493,6 +508,16 @@ damit das Frontend sie zum Lernen anzeigen kann.
   "correct_option": {
     "id": 101,
     "text": "Ein logisch unterteilter Teil eines Netzwerks"
+  },
+  "flashcard": {
+    "id": 42,
+    "question": "Was ist ein Subnetz?",
+    "answer": "Ein logisch unterteilter Teil eines groesseren Netzwerks.",
+    "exam_type": "ap2_fisi",
+    "topic": {
+      "id": 3,
+      "name": "Netzwerktechnik"
+    }
   }
 }
 ```
