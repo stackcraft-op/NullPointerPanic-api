@@ -727,36 +727,41 @@ Zusätzliche, optionale Felder im Request Body:
 ```json
 {
   "avatar_id": 1,
-  "frame_id": 4,
-  "status": "Grinder seit Tag 1"
+  "frame_id": 4
 }
 ```
 
 `avatar_id`/`frame_id` nur setzbar, wenn das jeweilige Item beim Nutzer
 `owned` ist — sonst 422.
 
-### POST /api/shop/status
+### PATCH /api/profile/status_text — ✅ bereits implementiert (PR #23)
 
-Setzt einen neuen Status-Text, kostet **fix 100 Currency pro Änderung**
-(unabhängig davon, wie oft schon geändert wurde). Erfordert gültigen Token.
+Setzt einen neuen Status-Text, kostet Currency pro Änderung. Eigener
+Endpoint statt Teil von `PATCH /api/profile`, wegen der abweichenden
+Kostenlogik. Erfordert gültigen Token.
 
 **Request Body:**
 
 ```json
-{ "status": "Grinder seit Tag 1" }
+{ "status_text": "Grinder seit Tag 1" }
 ```
 
 **Antwort Erfolg — 200 OK:**
 
 ```json
-{ "status": "Grinder seit Tag 1", "currency": 50 }
+{ "status_text": "Grinder seit Tag 1", "currency": 50 }
 ```
 
-**Antwort Fehler — 422 Unprocessable Entity:**
+**Antwort Fehler — 422 Unprocessable Entity** (leerer Text oder zu wenig
+Currency):
 
 ```json
 { "error": "Nicht genug Currency" }
 ```
+
+**⚠️ Preis-Abweichung, bitte klären:** `Profile::STATUS_TEXT_COST` steht
+aktuell auf `10`. Abgesprochen war **100** — bitte in `app/models/profile.rb`
+anpassen, dann ist dieser Abschnitt aktuell und der Punkt unten kann raus.
 
 ---
 
@@ -765,3 +770,7 @@ Setzt einen neuen Status-Text, kostet **fix 100 Currency pro Änderung**
 - [ ] Passwort-Mindestlänge / Regeln — wer validiert
 - [ ] Token-Refresh
 - [ ] Endpoint für "Passwort zurücksetzen" (per E-Mail)
+- [ ] `Profile::STATUS_TEXT_COST` von 10 auf 100 ändern (siehe
+      `PATCH /api/profile/status_text` oben — abgesprochener Preis war 100)
+- [ ] `GET /api/shop/items` + `POST /api/shop/items/:id/purchase` für
+      Avatare/Rahmen noch nicht gebaut (siehe Abschnitt "Shop" oben)
