@@ -24,5 +24,7 @@ Rails.application.routes.draw do
     post "flashcards/:flashcard_id/check", to: "flashcard_checks#create"
     post "quiz", to: "quiz#create"
     post "answer_options/:id/quiz_submit", to: "answer_options#quiz_submit"
+    get "shop/items", to: "shop_items#index"
+    post "shop/items/:id/purchase", to: "shop_items#purchase"
   end
 end

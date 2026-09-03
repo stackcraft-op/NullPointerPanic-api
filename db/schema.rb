@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_000016) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_000018) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,6 +52,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_000016) do
     t.index ["flashcard_id"], name: "index_multiple_choice_questions_on_flashcard_id", unique: true
   end
 
+  create_table "owned_shop_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "shop_item_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["shop_item_id"], name: "index_owned_shop_items_on_shop_item_id"
+    t.index ["user_id", "shop_item_id"], name: "index_owned_shop_items_on_user_id_and_shop_item_id", unique: true
+    t.index ["user_id"], name: "index_owned_shop_items_on_user_id"
+  end
+
   create_table "profiles", force: :cascade do |t|
     t.string "city"
     t.datetime "created_at", null: false
@@ -80,6 +90,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_000016) do
     t.index ["user_id"], name: "index_progress_entries_on_user_id"
   end
 
+  create_table "shop_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "image_url"
+    t.string "name"
+    t.integer "price"
+    t.string "type_category"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "topics", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name"
@@ -104,6 +123,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_000016) do
   add_foreign_key "checked_flashcards", "users"
   add_foreign_key "flashcards", "topics"
   add_foreign_key "multiple_choice_questions", "flashcards"
+  add_foreign_key "owned_shop_items", "shop_items"
+  add_foreign_key "owned_shop_items", "users"
   add_foreign_key "profiles", "users"
   add_foreign_key "progress_entries", "multiple_choice_questions"
   add_foreign_key "progress_entries", "users"
