@@ -676,6 +676,90 @@ Authorization: Bearer <token>
 
 ---
 
+## Shop (Vorschlag, noch NICHT implementiert)
+
+Ersetzt das tote `/karteikarten`-Feature im Frontend. Nutzer sollen mit
+`currency` (siehe `GET /api/profile`) Avatare, Rahmen und einen frei
+wählbaren Profil-Status freischalten können. Frontend fängt schon mit
+Mock-Daten in genau dieser Form an — bitte kurz gegenlesen, v.a. die offene
+Frage unten zu `type`.
+
+### GET /api/shop/items
+
+Katalog aller kaufbaren Avatare+Rahmen, inkl. ob der eingeloggte Nutzer sie
+schon besitzt. Erfordert gültigen Token.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+[
+  { "id": 1, "type": "avatar", "name": "Roboter", "price": 50, "image_url": "...", "owned": false },
+  { "id": 4, "type": "frame", "name": "Gold-Rahmen", "price": 200, "image_url": "...", "owned": true }
+]
+```
+
+`type` ist entweder `"avatar"` oder `"frame"` — ein gemeinsamer Endpoint
+statt zwei getrennten (`/api/shop/avatars`, `/api/shop/frames`), weil sich
+Avatare und Rahmen im Ablauf nicht unterscheiden (Katalog → kaufen →
+`owned` wird `true` → auswählbar).
+
+### POST /api/shop/items/:id/purchase
+
+Kauft ein Item, zieht `price` von `currency` ab. Erfordert gültigen Token.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{ "currency": 150 }
+```
+
+**Antwort Fehler — 422 Unprocessable Entity** (zu wenig Currency oder Item
+schon `owned`):
+
+```json
+{ "error": "Nicht genug Currency" }
+```
+
+### PATCH /api/profile (Erweiterung des bestehenden Endpoints)
+
+Zusätzliche, optionale Felder im Request Body:
+
+```json
+{
+  "avatar_id": 1,
+  "frame_id": 4,
+  "status": "Grinder seit Tag 1"
+}
+```
+
+`avatar_id`/`frame_id` nur setzbar, wenn das jeweilige Item beim Nutzer
+`owned` ist — sonst 422.
+
+### POST /api/shop/status
+
+Setzt einen neuen Status-Text, kostet **fix 100 Currency pro Änderung**
+(unabhängig davon, wie oft schon geändert wurde). Erfordert gültigen Token.
+
+**Request Body:**
+
+```json
+{ "status": "Grinder seit Tag 1" }
+```
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{ "status": "Grinder seit Tag 1", "currency": 50 }
+```
+
+**Antwort Fehler — 422 Unprocessable Entity:**
+
+```json
+{ "error": "Nicht genug Currency" }
+```
+
+---
+
 ## Offene Punkte
 
 - [ ] Passwort-Mindestlänge / Regeln — wer validiert
