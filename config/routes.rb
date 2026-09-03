@@ -12,6 +12,7 @@ Rails.application.routes.draw do
     post "login", to: "sessions#create"
     get "profile", to: "profiles#show"
     patch "profile", to: "profiles#update"
+    patch "profile/status_text", to: "profiles#update_status_text"
     get "flashcards/daily", to: "flashcards#daily"
     get "flashcards", to: "flashcards#index"
     post "answer_options/:id/submit", to: "answer_options#submit"

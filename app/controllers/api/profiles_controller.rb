@@ -35,6 +35,24 @@ module Api
       }
     end
 
+    def update_status_text
+      profile = @current_user.profile
+      new_text = params[:status_text]
+
+      if new_text.blank?
+        return render json: { error: "Statustext darf nicht leer sein" }, status: :unprocessable_entity
+      end
+
+      if profile.currency < Profile::STATUS_TEXT_COST
+        return render json: { error: "Nicht genug Currency" }, status: :unprocessable_entity
+      end
+
+      profile.status_text = new_text
+      profile.currency -= Profile::STATUS_TEXT_COST
+      profile.save!
+
+      render json: { status_text: profile.status_text, currency: profile.currency }
+    end
 
     private
 
