@@ -31,7 +31,8 @@ module Api
         city: profile.city,
         state: profile.state,
         experience: profile.experience,
-        currency: profile.currency
+        currency: profile.currency,
+        status_text: profile.status_text
       }
     end
 
