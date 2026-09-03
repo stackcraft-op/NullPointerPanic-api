@@ -676,8 +676,101 @@ Authorization: Bearer <token>
 
 ---
 
+## Shop (Vorschlag, noch NICHT implementiert)
+
+Ersetzt das tote `/karteikarten`-Feature im Frontend. Nutzer sollen mit
+`currency` (siehe `GET /api/profile`) Avatare, Rahmen und einen frei
+wählbaren Profil-Status freischalten können. Frontend fängt schon mit
+Mock-Daten in genau dieser Form an — bitte kurz gegenlesen, v.a. die offene
+Frage unten zu `type`.
+
+### GET /api/shop/items
+
+Katalog aller kaufbaren Avatare+Rahmen, inkl. ob der eingeloggte Nutzer sie
+schon besitzt. Erfordert gültigen Token.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+[
+  { "id": 1, "type": "avatar", "name": "Roboter", "price": 50, "image_url": "...", "owned": false },
+  { "id": 4, "type": "frame", "name": "Gold-Rahmen", "price": 200, "image_url": "...", "owned": true }
+]
+```
+
+`type` ist entweder `"avatar"` oder `"frame"` — ein gemeinsamer Endpoint
+statt zwei getrennten (`/api/shop/avatars`, `/api/shop/frames`), weil sich
+Avatare und Rahmen im Ablauf nicht unterscheiden (Katalog → kaufen →
+`owned` wird `true` → auswählbar).
+
+### POST /api/shop/items/:id/purchase
+
+Kauft ein Item, zieht `price` von `currency` ab. Erfordert gültigen Token.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{ "currency": 150 }
+```
+
+**Antwort Fehler — 422 Unprocessable Entity** (zu wenig Currency oder Item
+schon `owned`):
+
+```json
+{ "error": "Nicht genug Currency" }
+```
+
+### PATCH /api/profile (Erweiterung des bestehenden Endpoints)
+
+Zusätzliche, optionale Felder im Request Body:
+
+```json
+{
+  "avatar_id": 1,
+  "frame_id": 4
+}
+```
+
+`avatar_id`/`frame_id` nur setzbar, wenn das jeweilige Item beim Nutzer
+`owned` ist — sonst 422.
+
+### PATCH /api/profile/status_text — ✅ bereits implementiert (PR #23)
+
+Setzt einen neuen Status-Text, kostet Currency pro Änderung. Eigener
+Endpoint statt Teil von `PATCH /api/profile`, wegen der abweichenden
+Kostenlogik. Erfordert gültigen Token.
+
+**Request Body:**
+
+```json
+{ "status_text": "Grinder seit Tag 1" }
+```
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{ "status_text": "Grinder seit Tag 1", "currency": 50 }
+```
+
+**Antwort Fehler — 422 Unprocessable Entity** (leerer Text oder zu wenig
+Currency):
+
+```json
+{ "error": "Nicht genug Currency" }
+```
+
+**⚠️ Preis-Abweichung, bitte klären:** `Profile::STATUS_TEXT_COST` steht
+aktuell auf `10`. Abgesprochen war **100** — bitte in `app/models/profile.rb`
+anpassen, dann ist dieser Abschnitt aktuell und der Punkt unten kann raus.
+
+---
+
 ## Offene Punkte
 
 - [ ] Passwort-Mindestlänge / Regeln — wer validiert
 - [ ] Token-Refresh
 - [ ] Endpoint für "Passwort zurücksetzen" (per E-Mail)
+- [ ] `Profile::STATUS_TEXT_COST` von 10 auf 100 ändern (siehe
+      `PATCH /api/profile/status_text` oben — abgesprochener Preis war 100)
+- [ ] `GET /api/shop/items` + `POST /api/shop/items/:id/purchase` für
+      Avatare/Rahmen noch nicht gebaut (siehe Abschnitt "Shop" oben)
