@@ -160,6 +160,112 @@ gültigen Token (siehe "Authentifizierte Anfragen" unten).
 }
 ```
 
+**Hinweis:** `avatar_id`/`frame_id` als optionale Ausrüst-Felder für diesen
+Endpunkt sind **geplant, aber noch nicht implementiert** — kommt als
+eigener Branch nach der Mittagspause. Siehe Abschnitt "Shop" unten.
+
+## PATCH /api/profile/status_text
+
+Setzt einen neuen Status-Text, sichtbar in den Ranglisten. Kostet Currency
+**bei jeder** Änderung, auch der ersten. Eigener Endpunkt statt Teil von
+`PATCH /api/profile`, wegen der abweichenden Kostenlogik. Erfordert
+gültigen Token.
+
+**Request Body:**
+
+```json
+{ "status_text": "Grinder seit Tag 1" }
+```
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{ "status_text": "Grinder seit Tag 1", "currency": 50 }
+```
+
+**Antwort Fehler — 422 Unprocessable Entity:**
+
+```json
+{ "error": "Statustext darf nicht leer sein" }
+```
+
+oder:
+
+```json
+{ "error": "Nicht genug Currency" }
+```
+
+**⚠️ Preis noch zu klären:** `Profile::STATUS_TEXT_COST` steht aktuell auf
+`10`. Falls `100` abgesprochen war, bitte in `app/models/profile.rb`
+anpassen — dieser Hinweis fliegt raus, sobald der Preis final bestätigt ist.
+
+## GET /api/shop/items
+
+Katalog aller kaufbaren Avatare **und** Rahmen in einer gemeinsamen Liste,
+inkl. ob der eingeloggte Nutzer sie schon besitzt. Ein gemeinsamer Endpunkt
+statt getrennter (`/api/shop/avatars`, `/api/shop/frames`), weil sich beide
+Item-Arten im Ablauf nicht unterscheiden (Katalog → kaufen → `owned` wird
+`true` → ausrüstbar). Erfordert gültigen Token.
+
+**Request:** kein Body nötig.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+[
+  { "id": 1, "type": "avatar", "name": "Roboter", "price": 50, "image_url": "...", "owned": false },
+  { "id": 4, "type": "frame", "name": "Gold-Rahmen", "price": 200, "image_url": "...", "owned": true }
+]
+```
+
+`type` ist entweder `"avatar"` oder `"frame"`.
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+## POST /api/shop/items/:id/purchase
+
+Kauft ein Item, zieht `price` von `currency` ab. Erfordert gültigen Token.
+
+**Request:** kein Body nötig, `:id` in der URL ist die `shop_item.id`.
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{ "currency": 150 }
+```
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+**Antwort Fehler — 404 Not Found** (ungültige `:id`):
+
+```json
+{ "error": "Item nicht gefunden" }
+```
+
+**Antwort Fehler — 422 Unprocessable Entity:**
+
+```json
+{ "error": "Item bereits im Besitz" }
+```
+
+oder:
+
+```json
+{ "error": "Nicht genug Currency" }
+```
+
 ## GET /api/topics/progress
 
 Gibt für jedes Themengebiet den Lernfortschritt des eingeloggten Nutzers als
@@ -676,53 +782,15 @@ Authorization: Bearer <token>
 
 ---
 
-## Shop (Vorschlag, noch NICHT implementiert)
+## Shop — Ausrüsten (geplant, noch NICHT implementiert)
 
-Ersetzt das tote `/karteikarten`-Feature im Frontend. Nutzer sollen mit
-`currency` (siehe `GET /api/profile`) Avatare, Rahmen und einen frei
-wählbaren Profil-Status freischalten können. Frontend fängt schon mit
-Mock-Daten in genau dieser Form an — bitte kurz gegenlesen, v.a. die offene
-Frage unten zu `type`.
-
-### GET /api/shop/items
-
-Katalog aller kaufbaren Avatare+Rahmen, inkl. ob der eingeloggte Nutzer sie
-schon besitzt. Erfordert gültigen Token.
-
-**Antwort Erfolg — 200 OK:**
-
-```json
-[
-  { "id": 1, "type": "avatar", "name": "Roboter", "price": 50, "image_url": "...", "owned": false },
-  { "id": 4, "type": "frame", "name": "Gold-Rahmen", "price": 200, "image_url": "...", "owned": true }
-]
-```
-
-`type` ist entweder `"avatar"` oder `"frame"` — ein gemeinsamer Endpoint
-statt zwei getrennten (`/api/shop/avatars`, `/api/shop/frames`), weil sich
-Avatare und Rahmen im Ablauf nicht unterscheiden (Katalog → kaufen →
-`owned` wird `true` → auswählbar).
-
-### POST /api/shop/items/:id/purchase
-
-Kauft ein Item, zieht `price` von `currency` ab. Erfordert gültigen Token.
-
-**Antwort Erfolg — 200 OK:**
-
-```json
-{ "currency": 150 }
-```
-
-**Antwort Fehler — 422 Unprocessable Entity** (zu wenig Currency oder Item
-schon `owned`):
-
-```json
-{ "error": "Nicht genug Currency" }
-```
+`GET /api/shop/items` und `POST /api/shop/items/:id/purchase` sind bereits
+implementiert (siehe oben). Was noch fehlt: das tatsächliche **Ausrüsten**
+eines gekauften Items.
 
 ### PATCH /api/profile (Erweiterung des bestehenden Endpoints)
 
-Zusätzliche, optionale Felder im Request Body:
+Geplante zusätzliche, optionale Felder im Request Body:
 
 ```json
 {
@@ -732,36 +800,7 @@ Zusätzliche, optionale Felder im Request Body:
 ```
 
 `avatar_id`/`frame_id` nur setzbar, wenn das jeweilige Item beim Nutzer
-`owned` ist — sonst 422.
-
-### PATCH /api/profile/status_text — ✅ bereits implementiert (PR #23)
-
-Setzt einen neuen Status-Text, kostet Currency pro Änderung. Eigener
-Endpoint statt Teil von `PATCH /api/profile`, wegen der abweichenden
-Kostenlogik. Erfordert gültigen Token.
-
-**Request Body:**
-
-```json
-{ "status_text": "Grinder seit Tag 1" }
-```
-
-**Antwort Erfolg — 200 OK:**
-
-```json
-{ "status_text": "Grinder seit Tag 1", "currency": 50 }
-```
-
-**Antwort Fehler — 422 Unprocessable Entity** (leerer Text oder zu wenig
-Currency):
-
-```json
-{ "error": "Nicht genug Currency" }
-```
-
-**⚠️ Preis-Abweichung, bitte klären:** `Profile::STATUS_TEXT_COST` steht
-aktuell auf `10`. Abgesprochen war **100** — bitte in `app/models/profile.rb`
-anpassen, dann ist dieser Abschnitt aktuell und der Punkt unten kann raus.
+`owned` ist — sonst 422. Kommt als eigener Branch.
 
 ---
 
@@ -770,7 +809,7 @@ anpassen, dann ist dieser Abschnitt aktuell und der Punkt unten kann raus.
 - [ ] Passwort-Mindestlänge / Regeln — wer validiert
 - [ ] Token-Refresh
 - [ ] Endpoint für "Passwort zurücksetzen" (per E-Mail)
-- [ ] `Profile::STATUS_TEXT_COST` von 10 auf 100 ändern (siehe
-      `PATCH /api/profile/status_text` oben — abgesprochener Preis war 100)
-- [ ] `GET /api/shop/items` + `POST /api/shop/items/:id/purchase` für
-      Avatare/Rahmen noch nicht gebaut (siehe Abschnitt "Shop" oben)
+- [ ] `Profile::STATUS_TEXT_COST` von 10 auf 100 ändern? (Preis mit
+      Frontend final klären — siehe `PATCH /api/profile/status_text` oben)
+- [ ] `PATCH /api/profile` um `avatar_id`/`frame_id` (Ausrüsten) erweitern
+      — siehe Abschnitt "Shop — Ausrüsten" oben
