@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_000018) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_000019) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,6 +63,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_000018) do
   end
 
   create_table "profiles", force: :cascade do |t|
+    t.bigint "active_avatar_item_id"
+    t.bigint "active_frame_item_id"
     t.string "city"
     t.datetime "created_at", null: false
     t.integer "currency", default: 0
@@ -75,6 +77,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_000018) do
     t.string "status_text"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
+    t.index ["active_avatar_item_id"], name: "index_profiles_on_active_avatar_item_id"
+    t.index ["active_frame_item_id"], name: "index_profiles_on_active_frame_item_id"
     t.index ["user_id"], name: "index_profiles_on_user_id", unique: true
   end
 
@@ -125,6 +129,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_000018) do
   add_foreign_key "multiple_choice_questions", "flashcards"
   add_foreign_key "owned_shop_items", "shop_items"
   add_foreign_key "owned_shop_items", "users"
+  add_foreign_key "profiles", "shop_items", column: "active_avatar_item_id"
+  add_foreign_key "profiles", "shop_items", column: "active_frame_item_id"
   add_foreign_key "profiles", "users"
   add_foreign_key "progress_entries", "multiple_choice_questions"
   add_foreign_key "progress_entries", "users"
