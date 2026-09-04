@@ -50,7 +50,9 @@ module Api
         state: profile.state,
         experience: profile.experience,
         currency: profile.currency,
-        status_text: profile.status_text
+        status_text: profile.status_text,
+        avatar: profile.active_avatar_item && { id: profile.active_avatar_item.id, image_url: profile.active_avatar_item.image_url },
+        frame: profile.active_frame_item && { id: profile.active_frame_item.id, image_url: profile.active_frame_item.image_url }
       }
     end
 
