@@ -50,7 +50,9 @@ aufrufen.
 
 Weitere mögliche Fehlermeldungen: `"Fachbereich darf nicht leer sein"`,
 `"Ungültiger Fachbereich"`, `"Bundesland darf nicht leer sein"`,
-`"Ungültiges Bundesland"`.
+`"Ungültiges Bundesland"`, `"Password muss mindestens 8 Zeichen lang sein"`
+(Passwort-Mindestlänge, gilt nur für neue Registrierungen/zukünftige
+Passwort-Änderungen).
 
 ## POST /api/login
 
@@ -811,7 +813,6 @@ Authorization: Bearer <token>
 
 ## Offene Punkte
 
-- [ ] Passwort-Mindestlänge / Regeln — wer validiert
 - [ ] Token-Refresh
 - [ ] Endpoint für "Passwort zurücksetzen" (per E-Mail)
 - [ ] `Profile::STATUS_TEXT_COST` von 10 auf 100 ändern? (Preis mit
