@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_many :owned_shop_items, dependent: :destroy
   validates :email, presence: true, uniqueness: true
   validates :username, presence: true, uniqueness: true
+  validates :password, length: { minimum: 8, message: "muss mindestens 8 Zeichen lang sein" }, if: -> { new_record? || !password.nil? }
 
   def set_streak!
     today = Date.current
