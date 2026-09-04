@@ -88,8 +88,8 @@ Einloggen mit Benutzername + Passwort.
 
 ## GET /api/profile
 
-Profildaten des eingeloggten Nutzers abrufen, inklusive Fortschritt (XP) und
-Currency (verdiente, einsetzbare Punkte z. B. für Avatare/Design). Erfordert
+Profildaten des eingeloggten Nutzers abrufen, inklusive Fortschritt (XP),
+Currency, Statustext und dem aktuell ausgerüsteten Avatar/Rahmen. Erfordert
 gültigen Token (siehe "Authentifizierte Anfragen" unten).
 
 **Request:** kein Body nötig.
@@ -106,12 +106,18 @@ gültigen Token (siehe "Authentifizierte Anfragen" unten).
   "city": "Köln",
   "state": "Nordrhein-Westfalen",
   "experience": 340,
-  "currency": 12
+  "currency": 12,
+  "status_text": "Grinder seit Tag 1",
+  "avatar": { "id": 2, "image_url": "/avatars/avatar1.jpg" },
+  "frame": null
 }
 ```
 
-`first_name`, `last_name`, `specialization`, `city`, `state` sind `null`,
-solange das Profil noch nicht ausgefüllt wurde.
+`first_name`, `last_name`, `specialization`, `city`, `state`, `status_text`
+sind `null`, solange nicht gesetzt. `avatar`/`frame` sind `null`, solange
+nichts ausgerüstet ist — Frontend zeigt in dem Fall einen eigenen
+Platzhalter. `image_url` ist ein **relativer** Pfad; die Basis-URL muss
+frontend-seitig vorangestellt werden (lokal `http://localhost:3000`).
 
 **Antwort Fehler — 401 Unauthorized:**
 
@@ -123,8 +129,9 @@ solange das Profil noch nicht ausgefüllt wurde.
 
 ## PATCH /api/profile
 
-Persönliche Profildaten aktualisieren (Name, Fachbereich, Wohnort). Erfordert
-gültigen Token (siehe "Authentifizierte Anfragen" unten).
+Persönliche Profildaten aktualisieren (Name, Fachbereich, Wohnort) sowie
+Avatar/Rahmen ausrüsten. Erfordert gültigen Token (siehe "Authentifizierte
+Anfragen" unten).
 
 **Request Body:**
 
@@ -134,9 +141,17 @@ gültigen Token (siehe "Authentifizierte Anfragen" unten).
   "last_name": "Mustermann",
   "specialization": "FIAE",
   "city": "Köln",
-  "state": "Nordrhein-Westfalen"
+  "state": "Nordrhein-Westfalen",
+  "avatar_id": 2,
+  "frame_id": 4
 }
 ```
+
+Alle Felder sind optional und unabhängig voneinander setzbar (Teil-Updates
+möglich). `avatar_id`/`frame_id` nur setzbar, wenn das jeweilige Item beim
+Nutzer laut `GET /api/shop/items` `owned: true` ist — sonst 422. Ausrüsten
+selbst ist **kostenlos** (anders als der Kauf über
+`POST /api/shop/items/:id/purchase`).
 
 **Antwort Erfolg — 200 OK:**
 
@@ -148,7 +163,9 @@ gültigen Token (siehe "Authentifizierte Anfragen" unten).
   "last_name": "Mustermann",
   "specialization": "FIAE",
   "city": "Köln",
-  "state": "Nordrhein-Westfalen"
+  "state": "Nordrhein-Westfalen",
+  "avatar_id": 2,
+  "frame_id": 4
 }
 ```
 
@@ -160,9 +177,15 @@ gültigen Token (siehe "Authentifizierte Anfragen" unten).
 }
 ```
 
-**Hinweis:** `avatar_id`/`frame_id` als optionale Ausrüst-Felder für diesen
-Endpunkt sind **geplant, aber noch nicht implementiert** — kommt als
-eigener Branch nach der Mittagspause. Siehe Abschnitt "Shop" unten.
+oder, bei nicht besessenem Item:
+
+```json
+{ "error": "Avatar nicht im Besitz" }
+```
+
+```json
+{ "error": "Rahmen nicht im Besitz" }
+```
 
 ## PATCH /api/profile/status_text
 
@@ -213,12 +236,16 @@ Item-Arten im Ablauf nicht unterscheiden (Katalog → kaufen → `owned` wird
 
 ```json
 [
-  { "id": 1, "type": "avatar", "name": "Roboter", "price": 50, "image_url": "...", "owned": false },
-  { "id": 4, "type": "frame", "name": "Gold-Rahmen", "price": 200, "image_url": "...", "owned": true }
+  { "id": 2, "type": "avatar", "name": "Avatar 1", "price": 25, "image_url": "/avatars/avatar1.jpg", "owned": true },
+  { "id": 4, "type": "frame", "name": "Gold-Rahmen", "price": 200, "image_url": "/frames/gold.png", "owned": false }
 ]
 ```
 
-`type` ist entweder `"avatar"` oder `"frame"`.
+`type` ist entweder `"avatar"` oder `"frame"`. `image_url` ist ein
+**relativer** Pfad zu einer lokal auf diesem Server gehosteten Datei
+(unter `public/`) — Frontend muss die Basis-URL selbst voranstellen.
+Aktuell 4 Avatare vorhanden, weitere folgen; Rahmen sind für eine spätere
+Woche geplant, noch nicht befüllt.
 
 **Antwort Fehler — 401 Unauthorized:**
 
@@ -782,28 +809,6 @@ Authorization: Bearer <token>
 
 ---
 
-## Shop — Ausrüsten (geplant, noch NICHT implementiert)
-
-`GET /api/shop/items` und `POST /api/shop/items/:id/purchase` sind bereits
-implementiert (siehe oben). Was noch fehlt: das tatsächliche **Ausrüsten**
-eines gekauften Items.
-
-### PATCH /api/profile (Erweiterung des bestehenden Endpoints)
-
-Geplante zusätzliche, optionale Felder im Request Body:
-
-```json
-{
-  "avatar_id": 1,
-  "frame_id": 4
-}
-```
-
-`avatar_id`/`frame_id` nur setzbar, wenn das jeweilige Item beim Nutzer
-`owned` ist — sonst 422. Kommt als eigener Branch.
-
----
-
 ## Offene Punkte
 
 - [ ] Passwort-Mindestlänge / Regeln — wer validiert
@@ -811,5 +816,9 @@ Geplante zusätzliche, optionale Felder im Request Body:
 - [ ] Endpoint für "Passwort zurücksetzen" (per E-Mail)
 - [ ] `Profile::STATUS_TEXT_COST` von 10 auf 100 ändern? (Preis mit
       Frontend final klären — siehe `PATCH /api/profile/status_text` oben)
-- [ ] `PATCH /api/profile` um `avatar_id`/`frame_id` (Ausrüsten) erweitern
-      — siehe Abschnitt "Shop — Ausrüsten" oben
+- [ ] Weitere Avatare (aktuell 4 von geplant 8) und Rahmen-Katalog
+      (kommt kommende Woche) noch zu ergänzen — kein Endpunkt-Change
+      nötig, nur Seed-Daten
+- [ ] Spy-Funktion (fremdes Profil per Ranking-Klick ansehen, mit
+      Freischaltung für die Themenfortschritts-Balken) — in Planung,
+      noch nicht implementiert
