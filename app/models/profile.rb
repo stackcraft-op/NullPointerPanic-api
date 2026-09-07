@@ -29,7 +29,8 @@ class Profile < ApplicationRecord
     return if status_text.blank?
 
     GameConfig::BLOCKED_WORDS.each do |word|
-      self.status_text = status_text.gsub(/#{Regexp.escape(word)}/i, "*" * word.length)
+      pattern = word.chars.map { |char| Regexp.escape(char) }.join('\s*')
+      self.status_text = status_text.gsub(/#{pattern}/i, "*" * word.length)
     end
   end
 end

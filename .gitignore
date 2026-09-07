@@ -34,7 +34,10 @@
 /config/*.key
 
 #Ignore Test files
-status*.json
+
 login.json
 register*.json
+*status*.json
+public/frames/
+public/avatars/frame1.jpg
 
