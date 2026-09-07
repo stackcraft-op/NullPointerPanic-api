@@ -18,6 +18,18 @@ class Profile < ApplicationRecord
   XP_PER_QUIZ_ANSWER = 3
   STATUS_TEXT_COST = 100
 
+  before_save :censor_status_text
+
   validates :specialization, presence: true, presence: { message: "Fachbereich darf nicht leer sein" }, inclusion: { in: SPECIALIZATIONS, message: "Ungueltiger Fachbereich" }
   validates :state, presence: true, presence: { message: "Bundesland darf nicht leer sein" }, inclusion: { in: STATES, message: "Ungueltiges Bundesland" }
+
+  private
+
+  def censor_status_text
+    return if status_text.blank?
+
+    GameConfig::BLOCKED_WORDS.each do |word|
+      self.status_text = status_text.gsub(/#{Regexp.escape(word)}/i, "*" * word.length)
+    end
+  end
 end
