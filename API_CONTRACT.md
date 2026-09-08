@@ -693,10 +693,10 @@ Nutzungsdauer (kein Zeitfenster). Erfordert gültigen Token.
 ```json
 {
   "top": [
-    { "rank": 1, "username": "maxmuster", "score": 1200 },
-    { "rank": 2, "username": "anna", "score": 980 }
+    { "rank": 1, "id": 8, "username": "maxmuster", "score": 1200 },
+    { "rank": 2, "id": 15, "username": "anna", "score": 980 }
   ],
-  "me": { "rank": 47, "username": "kevin", "score": 90 }
+  "me": { "rank": 47, "id": 3, "username": "kevin", "score": 90 }
 }
 ```
 
@@ -704,7 +704,10 @@ Nutzungsdauer (kein Zeitfenster). Erfordert gültigen Token.
 es insgesamt gibt. `me` zeigt den eigenen Rang, auch wenn dieser außerhalb
 der Top 10 liegt — so kann das Frontend z. B. "Du bist #47" anzeigen, ohne
 die komplette Liste laden zu müssen. `score` ist bei `overall` die aktuelle
-`experience` aus dem eigenen Profil.
+`experience` aus dem eigenen Profil. **`id` (neu, für Profil-Popup):**
+User-ID, damit das Frontend beim Klick auf einen Ranking-Eintrag
+`GET /api/users/:id/profile` (siehe unten) aufrufen kann — gilt auch für
+`GET /api/rankings/weekly` und `GET /api/rankings/by_state`.
 
 **Antwort Fehler — 401 Unauthorized:**
 
@@ -730,14 +733,14 @@ zurück, sobald ein neuer Montag beginnt. Erfordert gültigen Token.
 ```json
 {
   "top": [
-    { "rank": 1, "username": "anna", "score": 18 },
-    { "rank": 2, "username": "maxmuster", "score": 15 }
+    { "rank": 1, "id": 15, "username": "anna", "score": 18 },
+    { "rank": 2, "id": 8, "username": "maxmuster", "score": 15 }
   ],
-  "me": { "rank": 3, "username": "kevin", "score": 12 }
+  "me": { "rank": 3, "id": 3, "username": "kevin", "score": 12 }
 }
 ```
 
-Identisches Format wie `GET /api/rankings/overall` — nur `score` bedeutet
+Identisches Format wie `GET /api/rankings/overall` (inkl. `id`) — nur `score` bedeutet
 hier "Anzahl richtig beantworteter Tageskarten-Fragen diese Woche" statt
 Gesamt-XP. Nutzer, die diese Woche noch nichts beantwortet haben, erscheinen
 mit `score: 0`, nicht gar nicht.
@@ -769,14 +772,14 @@ GET /api/rankings/by_state?state=Bayern
 ```json
 {
   "top": [
-    { "rank": 1, "username": "anna", "score": 800 },
-    { "rank": 2, "username": "tom", "score": 650 }
+    { "rank": 1, "id": 15, "username": "anna", "score": 800 },
+    { "rank": 2, "id": 22, "username": "tom", "score": 650 }
   ],
-  "me": { "rank": 5, "username": "kevin", "score": 200 }
+  "me": { "rank": 5, "id": 3, "username": "kevin", "score": 200 }
 }
 ```
 
-Gleiches Format wie die anderen Ranking-Endpunkte. `me` ist `null`, falls
+Gleiches Format wie die anderen Ranking-Endpunkte (inkl. `id`). `me` ist `null`, falls
 der eingeloggte Nutzer nicht aus dem angefragten Bundesland kommt (dann
 also nicht in der gefilterten Liste vorkommt).
 
@@ -793,6 +796,60 @@ also nicht in der gefilterten Liste vorkommt).
 ```json
 {
   "error": "Bundesland fehlt"
+}
+```
+
+## GET /api/users/:id/profile
+
+Öffentliches Profil eines **beliebigen** Nutzers abrufen — Datenbasis für das
+Profil-Popup, das sich im Ranking beim Klick auf einen Username öffnet
+(Avatar, Rahmen, Statustext, Gesamtfortschritt). Bewusst ein eigener,
+schlankerer Endpoint statt `GET /api/profile` mit optionaler `:id` — zeigt
+nur das, was auch fremde Nutzer sehen dürfen. Erfordert gültigen Token.
+
+**Request:** kein Body nötig. `:id` in der URL ist die `user.id`, z. B. aus
+`GET /api/rankings/overall` (o. Ä., siehe `id`-Feld dort).
+
+**Antwort Erfolg — 200 OK:**
+
+```json
+{
+  "id": 47,
+  "username": "kevin",
+  "status_text": "Grinder seit Tag 1",
+  "avatar": { "id": 2, "image_url": "/avatars/avatar1.jpg" },
+  "frame": { "id": 4, "image_url": "/frames/gold.png" },
+  "overall_progress_percent": 42
+}
+```
+
+`status_text` ist `null`, solange nicht gesetzt. `avatar`/`frame` sind
+`null`, solange der Nutzer nichts ausgerüstet hat — gleiches Verhalten wie
+bei `GET /api/profile`. `image_url` ist wie überall ein **relativer** Pfad.
+`overall_progress_percent` ist der Durchschnitt der `progress_percent`-Werte
+aus `GET /api/topics/progress`, aber serverseitig für DIESEN Nutzer
+vorberechnet (gerundete Ganzzahl 0–100) — das Frontend soll hier nicht
+6 Einzelwerte bekommen und selbst mitteln müssen, nur die eine Zahl fürs
+Popup.
+
+**Absichtlich NICHT enthalten** (Unterschied zu `GET /api/profile`):
+`currency`, `email`, `experience`, `first_name`/`last_name`,
+`specialization`/`city`/`state` — das ist ein fremdes Profil, keine
+Kontodaten oder private Angaben zeigen.
+
+**Antwort Fehler — 401 Unauthorized:**
+
+```json
+{
+  "error": "Nicht autorisiert"
+}
+```
+
+**Antwort Fehler — 404 Not Found** (ungültige `:id`):
+
+```json
+{
+  "error": "Nutzer nicht gefunden"
 }
 ```
 
@@ -820,6 +877,7 @@ Authorization: Bearer <token>
 - [ ] Weitere Avatare (aktuell 4 von geplant 8) und Rahmen-Katalog
       (kommt kommende Woche) noch zu ergänzen — kein Endpunkt-Change
       nötig, nur Seed-Daten
-- [ ] Spy-Funktion (fremdes Profil per Ranking-Klick ansehen, mit
-      Freischaltung für die Themenfortschritts-Balken) — in Planung,
-      noch nicht implementiert
+- [ ] `GET /api/users/:id/profile` (Profil-Popup im Ranking) spezifiziert,
+      noch nicht implementiert — siehe Abschnitt oben. `id`-Feld in den
+      drei Ranking-Endpunkten (`overall`/`weekly`/`by_state`) muss dafür
+      ebenfalls noch ergänzt werden.
