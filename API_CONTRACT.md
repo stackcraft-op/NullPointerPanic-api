@@ -693,10 +693,10 @@ Nutzungsdauer (kein Zeitfenster). Erfordert gültigen Token.
 ```json
 {
   "top": [
-    { "rank": 1, "id": 8, "username": "maxmuster", "score": 1200 },
-    { "rank": 2, "id": 15, "username": "anna", "score": 980 }
+    { "rank": 1, "id": 8, "username": "maxmuster", "score": 1200, "avatar_url": "/avatars/avatar3.jpg", "frame_url": "/frames/frame1.png" },
+    { "rank": 2, "id": 15, "username": "anna", "score": 980, "avatar_url": null, "frame_url": null }
   ],
-  "me": { "rank": 47, "id": 3, "username": "kevin", "score": 90 }
+  "me": { "rank": 47, "id": 3, "username": "kevin", "score": 90, "avatar_url": null, "frame_url": null }
 }
 ```
 
@@ -704,10 +704,21 @@ Nutzungsdauer (kein Zeitfenster). Erfordert gültigen Token.
 es insgesamt gibt. `me` zeigt den eigenen Rang, auch wenn dieser außerhalb
 der Top 10 liegt — so kann das Frontend z. B. "Du bist #47" anzeigen, ohne
 die komplette Liste laden zu müssen. `score` ist bei `overall` die aktuelle
-`experience` aus dem eigenen Profil. **`id` (neu, für Profil-Popup):**
-User-ID, damit das Frontend beim Klick auf einen Ranking-Eintrag
+`experience` aus dem eigenen Profil. **`id` (für Profil-Popup):** User-ID,
+damit das Frontend beim Klick auf einen Ranking-Eintrag
 `GET /api/users/:id/profile` (siehe unten) aufrufen kann — gilt auch für
-`GET /api/rankings/weekly` und `GET /api/rankings/by_state`.
+`GET /api/rankings/weekly` und `GET /api/rankings/by_state`. **`avatar_url`/
+`frame_url`:** direkt im Ranking mitgeliefert, damit z. B. kleine
+Avatar-Thumbnails in der Ranking-Zeile möglich sind, ohne pro Zeile extra
+`GET /api/users/:id/profile` aufzurufen — `null`, solange nichts
+ausgerüstet ist, sonst wie überall ein **relativer** Pfad. Achtung,
+**andere Feldnamen/Form** als bei `GET /api/users/:id/profile`
+(`avatar`/`frame` als `{id, image_url}`-Objekt statt `avatar_url` als
+reiner String) — zwei verschiedene Endpunkte für zwei verschiedene
+Anwendungsfälle, bewusst nicht vereinheitlicht. `rank` kann bei
+Punktgleichstand mehrfach vergeben werden (z. B. zwei Einträge mit
+`rank: 1`, wenn beide denselben Score haben) — gilt für alle drei
+Ranking-Endpunkte.
 
 **Antwort Fehler — 401 Unauthorized:**
 
@@ -733,14 +744,14 @@ zurück, sobald ein neuer Montag beginnt. Erfordert gültigen Token.
 ```json
 {
   "top": [
-    { "rank": 1, "id": 15, "username": "anna", "score": 18 },
-    { "rank": 2, "id": 8, "username": "maxmuster", "score": 15 }
+    { "rank": 1, "id": 15, "username": "anna", "score": 18, "avatar_url": null, "frame_url": null },
+    { "rank": 2, "id": 8, "username": "maxmuster", "score": 15, "avatar_url": "/avatars/avatar3.jpg", "frame_url": "/frames/frame1.png" }
   ],
-  "me": { "rank": 3, "id": 3, "username": "kevin", "score": 12 }
+  "me": { "rank": 3, "id": 3, "username": "kevin", "score": 12, "avatar_url": null, "frame_url": null }
 }
 ```
 
-Identisches Format wie `GET /api/rankings/overall` (inkl. `id`) — nur `score` bedeutet
+Identisches Format wie `GET /api/rankings/overall` (inkl. `id`/`avatar_url`/`frame_url`) — nur `score` bedeutet
 hier "Anzahl richtig beantworteter Tageskarten-Fragen diese Woche" statt
 Gesamt-XP. Nutzer, die diese Woche noch nichts beantwortet haben, erscheinen
 mit `score: 0`, nicht gar nicht.
@@ -772,14 +783,14 @@ GET /api/rankings/by_state?state=Bayern
 ```json
 {
   "top": [
-    { "rank": 1, "id": 15, "username": "anna", "score": 800 },
-    { "rank": 2, "id": 22, "username": "tom", "score": 650 }
+    { "rank": 1, "id": 15, "username": "anna", "score": 800, "avatar_url": null, "frame_url": null },
+    { "rank": 2, "id": 22, "username": "tom", "score": 650, "avatar_url": null, "frame_url": null }
   ],
-  "me": { "rank": 5, "id": 3, "username": "kevin", "score": 200 }
+  "me": { "rank": 5, "id": 3, "username": "kevin", "score": 200, "avatar_url": "/avatars/avatar3.jpg", "frame_url": "/frames/frame1.png" }
 }
 ```
 
-Gleiches Format wie die anderen Ranking-Endpunkte (inkl. `id`). `me` ist `null`, falls
+Gleiches Format wie die anderen Ranking-Endpunkte (inkl. `id`/`avatar_url`/`frame_url`). `me` ist `null`, falls
 der eingeloggte Nutzer nicht aus dem angefragten Bundesland kommt (dann
 also nicht in der gefilterten Liste vorkommt).
 
@@ -877,7 +888,6 @@ Authorization: Bearer <token>
 - [ ] Weitere Avatare (aktuell 4 von geplant 8) und Rahmen-Katalog
       (kommt kommende Woche) noch zu ergänzen — kein Endpunkt-Change
       nötig, nur Seed-Daten
-- [ ] `GET /api/users/:id/profile` (Profil-Popup im Ranking) spezifiziert,
-      noch nicht implementiert — siehe Abschnitt oben. `id`-Feld in den
-      drei Ranking-Endpunkten (`overall`/`weekly`/`by_state`) muss dafür
-      ebenfalls noch ergänzt werden.
+- [x] `GET /api/users/:id/profile` (Profil-Popup im Ranking) implementiert
+      (PR #37), inkl. `id`/`avatar_url`/`frame_url` in allen drei
+      Ranking-Endpunkten. Gegen echten Testaccount verifiziert (08.09).
