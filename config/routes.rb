@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   # root "posts#index"
   namespace :api do
     post "register", to: "users#create"
+    get "users/:id/profile", to: "users#profile"
     post "login", to: "sessions#create"
     get "profile", to: "profiles#show"
     patch "profile", to: "profiles#update"
