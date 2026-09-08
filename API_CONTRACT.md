@@ -192,9 +192,16 @@ oder, bei nicht besessenem Item:
 ## PATCH /api/profile/status_text
 
 Setzt einen neuen Status-Text, sichtbar in den Ranglisten. Kostet Currency
-**bei jeder** Änderung, auch der ersten. Eigener Endpunkt statt Teil von
-`PATCH /api/profile`, wegen der abweichenden Kostenlogik. Erfordert
-gültigen Token.
+**bei jeder** Änderung, auch der ersten (aktuell `100`). Eigener Endpunkt
+statt Teil von `PATCH /api/profile`, wegen der abweichenden Kostenlogik.
+Erfordert gültigen Token.
+
+**Wichtig — Wortfilter:** Unangemessene Wörter im Text werden **nicht
+abgelehnt**, sondern automatisch durch Sternchen ersetzt (`*` in gleicher
+Länge wie das jeweilige Wort), bevor gespeichert wird — der Request schlägt
+dadurch **nicht** fehl. Erkennung ist case-insensitive und funktioniert
+auch bei Leerzeichen zwischen den Buchstaben (`"a r s c h l o c h"` wird
+genauso erkannt wie `"arschloch"`).
 
 **Request Body:**
 
@@ -208,6 +215,12 @@ gültigen Token.
 { "status_text": "Grinder seit Tag 1", "currency": 50 }
 ```
 
+Bei zensiertem Text z. B.:
+
+```json
+{ "status_text": "Ich bin ein *********", "currency": 50 }
+```
+
 **Antwort Fehler — 422 Unprocessable Entity:**
 
 ```json
@@ -219,10 +232,6 @@ oder:
 ```json
 { "error": "Nicht genug Currency" }
 ```
-
-**⚠️ Preis noch zu klären:** `Profile::STATUS_TEXT_COST` steht aktuell auf
-`10`. Falls `100` abgesprochen war, bitte in `app/models/profile.rb`
-anpassen — dieser Hinweis fliegt raus, sobald der Preis final bestätigt ist.
 
 ## GET /api/shop/items
 
@@ -246,8 +255,7 @@ Item-Arten im Ablauf nicht unterscheiden (Katalog → kaufen → `owned` wird
 `type` ist entweder `"avatar"` oder `"frame"`. `image_url` ist ein
 **relativer** Pfad zu einer lokal auf diesem Server gehosteten Datei
 (unter `public/`) — Frontend muss die Basis-URL selbst voranstellen.
-Aktuell 4 Avatare vorhanden, weitere folgen; Rahmen sind für eine spätere
-Woche geplant, noch nicht befüllt.
+Aktuell 4 Avatare und erste 2 Rahmen vorhanden, weitere folgen sukzessive.
 
 **Antwort Fehler — 401 Unauthorized:**
 
@@ -693,10 +701,10 @@ Nutzungsdauer (kein Zeitfenster). Erfordert gültigen Token.
 ```json
 {
   "top": [
-    { "rank": 1, "id": 8, "username": "maxmuster", "score": 1200 },
-    { "rank": 2, "id": 15, "username": "anna", "score": 980 }
+    { "rank": 1, "id": 8, "username": "maxmuster", "score": 1200, "avatar_url": "/avatars/avatar1.jpg", "frame_url": "/frames/gold.png" },
+    { "rank": 2, "id": 15, "username": "anna", "score": 980, "avatar_url": null, "frame_url": null }
   ],
-  "me": { "rank": 47, "id": 3, "username": "kevin", "score": 90 }
+  "me": { "rank": 47, "id": 3, "username": "kevin", "score": 90, "avatar_url": null, "frame_url": null }
 }
 ```
 
@@ -704,10 +712,16 @@ Nutzungsdauer (kein Zeitfenster). Erfordert gültigen Token.
 es insgesamt gibt. `me` zeigt den eigenen Rang, auch wenn dieser außerhalb
 der Top 10 liegt — so kann das Frontend z. B. "Du bist #47" anzeigen, ohne
 die komplette Liste laden zu müssen. `score` ist bei `overall` die aktuelle
-`experience` aus dem eigenen Profil. **`id` (neu, für Profil-Popup):**
-User-ID, damit das Frontend beim Klick auf einen Ranking-Eintrag
-`GET /api/users/:id/profile` (siehe unten) aufrufen kann — gilt auch für
-`GET /api/rankings/weekly` und `GET /api/rankings/by_state`.
+`experience` aus dem eigenen Profil. `avatar_url`/`frame_url` sind `null`,
+solange der jeweilige Nutzer nichts ausgerüstet hat (gleiches Verhalten wie
+bei `GET /api/profile`). `id` (User-ID) dient dem Frontend dazu, beim Klick
+auf einen Ranking-Eintrag `GET /api/users/:id/profile` (siehe unten)
+aufzurufen — gilt genauso für `GET /api/rankings/weekly` und
+`GET /api/rankings/by_state`.
+
+**Rangvergabe bei Gleichstand:** Mehrere Nutzer mit identischem Score
+bekommen denselben Rang (z. B. `4, 4, 4`), der nächste Rang danach springt
+entsprechend (kein `5`, sondern `7`, wenn drei Nutzer auf Rang 4 liegen).
 
 **Antwort Fehler — 401 Unauthorized:**
 
@@ -733,14 +747,15 @@ zurück, sobald ein neuer Montag beginnt. Erfordert gültigen Token.
 ```json
 {
   "top": [
-    { "rank": 1, "id": 15, "username": "anna", "score": 18 },
-    { "rank": 2, "id": 8, "username": "maxmuster", "score": 15 }
+    { "rank": 1, "id": 15, "username": "anna", "score": 18, "avatar_url": null, "frame_url": null },
+    { "rank": 2, "id": 8, "username": "maxmuster", "score": 15, "avatar_url": "/avatars/avatar1.jpg", "frame_url": "/frames/gold.png" }
   ],
-  "me": { "rank": 3, "id": 3, "username": "kevin", "score": 12 }
+  "me": { "rank": 3, "id": 3, "username": "kevin", "score": 12, "avatar_url": null, "frame_url": null }
 }
 ```
 
-Identisches Format wie `GET /api/rankings/overall` (inkl. `id`) — nur `score` bedeutet
+Identisches Format wie `GET /api/rankings/overall` (inkl. `id`,
+`avatar_url`, `frame_url`, Gleichstand-Verhalten) — nur `score` bedeutet
 hier "Anzahl richtig beantworteter Tageskarten-Fragen diese Woche" statt
 Gesamt-XP. Nutzer, die diese Woche noch nichts beantwortet haben, erscheinen
 mit `score: 0`, nicht gar nicht.
@@ -772,14 +787,15 @@ GET /api/rankings/by_state?state=Bayern
 ```json
 {
   "top": [
-    { "rank": 1, "id": 15, "username": "anna", "score": 800 },
-    { "rank": 2, "id": 22, "username": "tom", "score": 650 }
+    { "rank": 1, "id": 15, "username": "anna", "score": 800, "avatar_url": null, "frame_url": null },
+    { "rank": 2, "id": 22, "username": "tom", "score": 650, "avatar_url": null, "frame_url": null }
   ],
-  "me": { "rank": 5, "id": 3, "username": "kevin", "score": 200 }
+  "me": { "rank": 5, "id": 3, "username": "kevin", "score": 200, "avatar_url": null, "frame_url": null }
 }
 ```
 
-Gleiches Format wie die anderen Ranking-Endpunkte (inkl. `id`). `me` ist `null`, falls
+Gleiches Format wie die anderen Ranking-Endpunkte (inkl. `id`,
+`avatar_url`, `frame_url`, Gleichstand-Verhalten). `me` ist `null`, falls
 der eingeloggte Nutzer nicht aus dem angefragten Bundesland kommt (dann
 also nicht in der gefilterten Liste vorkommt).
 
@@ -872,12 +888,5 @@ Authorization: Bearer <token>
 
 - [ ] Token-Refresh
 - [ ] Endpoint für "Passwort zurücksetzen" (per E-Mail)
-- [ ] `Profile::STATUS_TEXT_COST` von 10 auf 100 ändern? (Preis mit
-      Frontend final klären — siehe `PATCH /api/profile/status_text` oben)
-- [ ] Weitere Avatare (aktuell 4 von geplant 8) und Rahmen-Katalog
-      (kommt kommende Woche) noch zu ergänzen — kein Endpunkt-Change
-      nötig, nur Seed-Daten
-- [ ] `GET /api/users/:id/profile` (Profil-Popup im Ranking) spezifiziert,
-      noch nicht implementiert — siehe Abschnitt oben. `id`-Feld in den
-      drei Ranking-Endpunkten (`overall`/`weekly`/`by_state`) muss dafür
-      ebenfalls noch ergänzt werden.
+- [ ] Weitere Avatare und Rahmen ergänzen (aktuell 4 Avatare) —
+      kein Endpunkt-Change nötig, nur Seed-Daten
