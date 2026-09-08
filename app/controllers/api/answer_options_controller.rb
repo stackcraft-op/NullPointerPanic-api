@@ -30,7 +30,7 @@ module Api
 
       # Currency nur beim ALLERERSTEN richtigen Versuch einer Frage (Anti-Farming)
       if @correct && !already_correct
-        @current_user.profile.increment!(:currency, Profile::CURRENCY_PER_CORRECT_ANSWER)
+        @current_user.profile.increment!(:currency, GameConfig::CURRENCY_PER_CORRECT_ANSWER)
       end
 
       award_daily_xp_bonus_if_complete
@@ -43,7 +43,7 @@ module Api
       record_progress(source: :quiz)
 
       if @correct
-        @current_user.profile.increment!(:experience, Profile::XP_PER_QUIZ_ANSWER)
+        @current_user.profile.increment!(:experience, GameConfig::XP_PER_CORRECT_QUIZ_ANSWER)
       else
         # Falsche Antwort im Quiz -> Karte rutscht zurueck in den Lern-Stapel
         CheckedFlashcard.find_by(user: @current_user, flashcard: @question.flashcard)&.destroy
@@ -120,7 +120,7 @@ module Api
                         .distinct
                         .pluck(:multiple_choice_question_id)
 
-      profile.increment(:experience, correct_today.size * Profile::XP_PER_CORRECT_ANSWER)
+      profile.increment(:experience, correct_today.size * GameConfig::XP_PER_CORRECT_DAILY_ANSWER)
       profile.daily_xp_awarded_on = Date.current
       profile.save!
     end
