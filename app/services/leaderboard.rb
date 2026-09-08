@@ -2,7 +2,7 @@
 
 class Leaderboard
   # Struct erzeugt eine kleine Klasse mit :user und :score als Attributen
-  Entry = Struct.new(:user, :score)
+  Entry = Struct.new(:user, :score, :avatar_url, :frame_url)
 
   def initialize(entries)
     @entries = entries
@@ -10,9 +10,9 @@ class Leaderboard
 
   # Gibt die Top 10 Eintraege zurueck
   def top(limit: 10)
-    @entries.first(limit).each_with_index.map do |entry, index|
-      # index startet bei 0, Rangplaetze aber bei 1
-      { rank: index + 1, username: entry.user.username, score: entry.score }
+    @entries.first(limit).map do |entry|
+      rank = 1 + @entries.count { |e| e.score > entry.score }
+      { rank: rank, id: entry.user.id, username: entry.user.username, score: entry.score, avatar_url: entry.avatar_url, frame_url: entry.frame_url }
     end
   end
 
@@ -24,6 +24,6 @@ class Leaderboard
 
     # Rang = 1 + Anzahl der Eintraege mit einem hoeheren Score.
     rank = 1 + @entries.count { |e| e.score > my_entry.score }
-    { rank: rank, username: my_entry.user.username, score: my_entry.score }
+    { rank: rank, id: my_entry.user.id, username: my_entry.user.username, score: my_entry.score, avatar_url: my_entry.avatar_url, frame_url: my_entry.frame_url  }
   end
 end
