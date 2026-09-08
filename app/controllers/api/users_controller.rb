@@ -7,7 +7,14 @@ module Api
       ActiveRecord::Base.transaction do
         user = User.new(user_params)
         user.save!
-        user.create_profile!(specialization: params[:specialization], state: params[:state])
+        profile = user.create_profile!(specialization: params[:specialization], state: params[:state])
+
+        starter_avatar = ShopItem.find_by(id: GameConfig::STARTER_AVATAR_ID)
+        if starter_avatar
+          OwnedShopItem.create!(user: user, shop_item: starter_avatar)
+          profile.update!(active_avatar_item: starter_avatar)
+        end
+
         render json: { id: user.id, username: user.username, email: user.email }, status: :created
       end
     rescue ActiveRecord::RecordInvalid => e
