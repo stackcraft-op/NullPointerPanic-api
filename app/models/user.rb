@@ -24,7 +24,7 @@ class User < ApplicationRecord
     save
 
     if current_streak.positive? && (current_streak % 7).zero?
-      profile.increment!(:currency, 10)
+      profile.increment!(:currency, GameConfig::STREAK_BONUS_CURRENCY)
     end
   end
 end
