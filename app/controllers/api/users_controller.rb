@@ -9,7 +9,7 @@ module Api
         user.save!
         profile = user.create_profile!(specialization: params[:specialization], state: params[:state])
 
-        starter_avatar = ShopItem.find_by(id: GameConfig::STARTER_AVATAR_ID)
+        starter_avatar = ShopItem.find_by(id: GameConfig::STARTER_AVATAR_NAME)
         if starter_avatar
           OwnedShopItem.create!(user: user, shop_item: starter_avatar)
           profile.update!(active_avatar_item: starter_avatar)
