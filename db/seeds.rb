@@ -37,3 +37,22 @@ topics = [
 ].each do |attrs|
   ShopItem.find_or_create_by!(name: attrs[:name]) { |item| item.assign_attributes(attrs) }
 end
+
+# --- Flashcards aus den Markdown-Rohdaten importieren ----------------------
+# Vorher manuell per "bin/rails flashcards:import[...]" 6x einzeln
+# aufgerufen (siehe lib/tasks/import_flashcards.rake) - jetzt Teil von
+# db:seed, laeuft also automatisch bei jeder frischen Datenbank mit (z.B.
+# Docker-Container). Der Task selbst ist idempotent (ueberspringt schon
+# vorhandene Fragen), reenable noetig, weil Rake denselben Task sonst nur
+# beim ersten invoke wirklich ausfuehrt.
+[
+  [ "db/seed_data/raw/lernkarten_thema1_it_infrastruktur.md", "IT-Infrastruktur & Netzwerke" ],
+  [ "db/seed_data/raw/lernkarten_thema2_softwareentwicklung.md", "Softwareentwicklung & Programmierung" ],
+  [ "db/seed_data/raw/lernkarten_thema3_datenbanken.md", "Datenbanken & Datenanalyse" ],
+  [ "db/seed_data/raw/lernkarten_thema4_itsicherheit.md", "IT-Sicherheit & Datenschutz" ],
+  [ "db/seed_data/raw/lernkarten_thema5_projektmanagement.md", "Projektmanagement & Qualitätssicherung" ],
+  [ "db/seed_data/raw/lernkarten_thema6_bwl_wirtschaft.md", "BWL, Wirtschaft & Organisation" ]
+].each do |file_path, topic_name|
+  Rake::Task["flashcards:import"].invoke(file_path, topic_name, "ap1")
+  Rake::Task["flashcards:import"].reenable
+end
