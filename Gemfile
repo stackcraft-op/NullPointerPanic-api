@@ -37,6 +37,14 @@ gem "image_processing", "~> 1.2"
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
+# Fuer die Login-Authentifizierung (ApplicationController#authenticate_request)
+# - MUSS ausserhalb der development/test-Gruppe stehen, sonst laedt Bundler
+# es in Produktion gar nicht (Gem ist zwar installiert, aber "require"
+# passiert nur fuer Gruppen, die zur aktuellen Rails.env passen). Stand
+# vorher faelschlich in der Dev/Test-Gruppe unten - dort nie aufgefallen,
+# weil im Dev-Modus (rails s) diese Gruppe sowieso automatisch mitlaeuft.
+gem "jwt"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
@@ -51,6 +59,4 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 
   gem "fiddle"
-
-  gem "jwt"
 end
