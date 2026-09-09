@@ -31,8 +31,12 @@ ENV RAILS_ENV="production" \
 FROM base AS build
 
 # Install packages needed to build gems
+# libffi-dev noetig fuer das "fiddle"-Gem (Ruby-Standardbibliothek) - auf
+# x86_64 gab's dafuer ein fertiges Gem ohne Kompilieren, auf aarch64
+# (z.B. Apple-Silicon-Docker) muss es aus Quellcode gebaut werden und
+# braucht dafuer die libffi-Header.
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev libvips libyaml-dev pkg-config && \
+    apt-get install --no-install-recommends -y build-essential git libffi-dev libpq-dev libvips libyaml-dev pkg-config && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install application gems

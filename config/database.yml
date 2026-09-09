@@ -17,7 +17,12 @@ default: &default
   encoding: unicode
   username: postgres
   password: <%= ENV["POSTGRES_PASSWORD"] %>
-  host: localhost
+  # Fest "localhost" war fuer Docker/docker-compose ein Problem: die
+  # Datenbank laeuft dort in einem eigenen Container mit eigenem Namen
+  # (z.B. "db"), "localhost" waere dort der API-Container selbst - ohne
+  # ENV-Override liess sich das nicht umbiegen. Lokales "rails s"
+  # bleibt unveraendert, weil der Default weiterhin localhost ist.
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
